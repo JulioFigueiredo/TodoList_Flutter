@@ -7,7 +7,8 @@ class TodoList extends StatefulWidget {
 }
 
 class _TodoListState extends State<TodoList> {
-  List<String> tasks = [];
+  // Lista para armazenar as tarefas com status
+  List<Map<String, dynamic>> tasks = [];
   final TextEditingController taskController = TextEditingController();
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
 
@@ -15,7 +16,8 @@ class _TodoListState extends State<TodoList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('To-Do List', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        title: Text('To-Do List',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blueAccent,
       ),
       body: Column(
@@ -41,7 +43,7 @@ class _TodoListState extends State<TodoList> {
                   icon: Icon(Icons.add, color: Colors.blueAccent),
                   onPressed: () {
                     if (taskController.text.isNotEmpty) {
-                      final newTask = taskController.text;
+                      final newTask = {'task': taskController.text, 'done': false}; // Tarefa não concluída inicialmente
                       setState(() {
                         tasks.insert(0, newTask);
                       });
@@ -58,13 +60,27 @@ class _TodoListState extends State<TodoList> {
               key: _listKey,
               initialItemCount: tasks.length,
               itemBuilder: (context, index, animation) {
-                return TaskItem(task: tasks[index], index: index, animation: animation, removeTask: _removeTask);
+                return TaskItem(
+                  task: tasks[index]['task'],
+                  isDone: tasks[index]['done'],
+                  index: index,
+                  animation: animation,
+                  toggleTaskStatus: _toggleTaskStatus,
+                  removeTask: _removeTask,
+                );
               },
             ),
           ),
         ],
       ),
     );
+  }
+
+  // Função para alternar o estado da tarefa (concluída ou não)
+  void _toggleTaskStatus(int index) {
+    setState(() {
+      tasks[index]['done'] = !tasks[index]['done'];
+    });
   }
 
   void _removeTask(int index) {
@@ -74,7 +90,14 @@ class _TodoListState extends State<TodoList> {
     });
     _listKey.currentState?.removeItem(
       index,
-      (context, animation) => TaskItem(task: removedTask, index: index, animation: animation, removeTask: _removeTask),
+      (context, animation) => TaskItem(
+        task: removedTask['task'],
+        isDone: removedTask['done'],
+        index: index,
+        animation: animation,
+        toggleTaskStatus: _toggleTaskStatus,
+        removeTask: _removeTask,
+      ),
     );
   }
 }
